@@ -1,5 +1,6 @@
 const express = require('express');
 const { verificarToken } = require('../middlewares/auth');
+const tutoresRoutes = require('./tutores.routes');
 
 const router = express.Router();
 
@@ -9,5 +10,7 @@ router.get('/sesion', verificarToken, (req, res) => {
     usuario: req.usuario
   });
 });
+
+router.use('/tutores', tutoresRoutes);
 
 module.exports = router;
