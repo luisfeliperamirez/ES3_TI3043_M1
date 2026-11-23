@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 1 - Registro de Animales y Tutores</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-content">
+      <div>
+        <h1>Tenencia Responsable · Antofagasta</h1>
+        <p class="subtitle">Módulo 1: Registro de Animales y Tutores</p>
+      </div>
+      <div id="sesion-info" class="sesion-box hidden">
+        <span id="usuario-activo"></span>
+        <button id="btn-logout" type="button" class="btn btn-outline">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="seccion-login" class="card">
+      <h2>Iniciar sesión con el Núcleo</h2>
+      <p class="help-text">Utilice un usuario de prueba del núcleo (clave común: <strong>tenencia2026</strong>).</p>
+      <form id="form-login" class="form-grid">
+        <div class="form-group">
+          <label for="login-rut">RUT</label>
+          <input type="text" id="login-rut" placeholder="Ej: 11111111-1" required>
+        </div>
+        <div class="form-group">
+          <label for="login-clave">Clave</label>
+          <input type="password" id="login-clave" value="tenencia2026" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Ingresar</button>
+        </div>
+      </form>
+      <div id="login-mensaje" class="alerta hidden"></div>
+    </section>
+
+    <section id="panel-modulo" class="hidden">
+      <div class="card">
+        <h2>HU-01 · Registro de Datos Personales del Tutor</h2>
+        <p class="help-text">Complete sus datos de contacto en Antofagasta para habilitar la inscripción de mascotas.</p>
+
+        <form id="form-hu01" class="form-grid">
+          <div class="form-group">
+            <label for="tutor-rut">RUT (XXXXXXXX-X)</label>
+            <input type="text" id="tutor-rut" placeholder="11111111-1" required>
+          </div>
+          <div class="form-group">
+            <label for="tutor-comuna">Comuna</label>
+            <input type="text" id="tutor-comuna" value="Antofagasta" readonly>
+          </div>
+          <div class="form-group full-width">
+            <label for="tutor-direccion">Dirección en Antofagasta</label>
+            <input type="text" id="tutor-direccion" placeholder="Ej: Av. Brasil 1234" required>
+          </div>
+          <div class="form-group">
+            <label for="tutor-telefono">Teléfono</label>
+            <input type="text" id="tutor-telefono" placeholder="+56912345678" required>
+          </div>
+          <div class="form-group">
+            <label for="tutor-correo">Correo electrónico</label>
+            <input type="email" id="tutor-correo" placeholder="vecino@correo.cl" required>
+          </div>
+          <div class="form-actions full-width">
+            <button type="submit" class="btn btn-primary">Guardar Ficha de Tutor</button>
+            <button type="button" id="btn-consultar-ficha" class="btn btn-secondary">Consultar Mi Ficha</button>
+          </div>
+        </form>
+
+        <div id="hu01-mensaje" class="alerta hidden"></div>
+
+        <div id="hu01-resultado" class="resultado-box hidden">
+          <h3>Ficha del Tutor</h3>
+          <pre id="hu01-json"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/hu01-tutores.js"></script>
+</body>
+</html>
