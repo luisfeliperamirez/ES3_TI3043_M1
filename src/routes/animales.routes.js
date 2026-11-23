@@ -23,7 +23,13 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
     const animal = await Animal.findOne({ animalId });
 
     if (!animal) {
-      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', 'No se encontró un animal con el animalId: ${animalId}');
+      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No se encontró un animal con el animalId: ${animalId}`);
+    }
+
+    const animalConMicrochip = await Animal.findOne({ microchip });
+
+    if (animalConMicrochip && animalConMicrochip.animalId !== animalId) {
+      return enviarError(res, 409, 'MICROCHIP_REGISTRADO', 'Microchip ya registrado');
     }
 
     animal.microchip = microchip;
