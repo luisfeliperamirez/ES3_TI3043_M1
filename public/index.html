@@ -45,6 +45,67 @@
         <h2>HU-01 · Registro de Datos Personales del Tutor</h2>
         <p class="help-text">Complete sus datos de contacto en Antofagasta para habilitar la inscripción de mascotas.</p>
 
+        
+        <p>
+          <input type="checkbox" id="comunitario-casilla" name="comunitario_casilla">
+          <label for="comunitario-casilla">El animal es comunitario</label>
+        </p>
+
+        <div id="campos-comunitario" style="display: none;">
+          <div class="form-group">
+            <label for="responsableRut">RUT del Responsable</label>
+            <input type="text" id="responsableRut" name="responsableRut" placeholder="Ej: 11111111-1">
+          </div>
+
+          <div class="form-group">
+            <label for="telefonoResponsable">Teléfono del Responsable</label>
+            <input type="text" id="telefonoResponsable" name="telefonoResponsable" placeholder="+56 9 XXXX XXXX">
+          </div>
+
+            <div class="form-group">
+            <label for="correoResponsable">Correo del Responsable</label>
+            <input type="text" id="correoResponsable" name="correoResponsable" placeholder="responsable@correo.cl">
+          </div>
+
+           <div class="form-group">
+            <label for="sectorAnimal">Sector donde se ubica el animal</label>
+            <input type="text" id="sectorAnimal" name="sectorAnimal" placeholder="Parque Japonés...">
+          </div>
+
+          <div class="form-group">
+            <label for="sector">Sector de Residencia/Junta de Vecinos</label>
+            <input type="text" id="sector" name="sectorResidencia" placeholder="Antofagasta, sector sur...">
+          </div>
+
+        </div>
+
+        <script>
+          const casillaComunitario = document.getElementById('comunitario-casilla');
+          const camposComunitario = document.getElementById('campos-comunitario');
+          const responsableRut = document.getElementById('responsableRut');
+          const telefonoResponsable = document.getElementById('telefonoResponsable');
+          const correoResponsable = document.getElementById('correoResponsable');
+          const sectorAnimal = document.getElementById('sectorAnimal');
+          const sectorInput = document.getElementById('sector');
+
+          function actualizarVisibilidadComunitario() {
+            const esComunitario = casillaComunitario.checked;
+            camposComunitario.style.display = esComunitario ? 'block' : 'none';
+
+           
+            if (!esComunitario) {
+              responsableRut.value = '';
+              sectorInput.value = '';
+              telefonoResponsable.value = '';
+              sectorAnimal.value = '';
+              correoResponsable.value = '';
+            }
+          }
+
+          casillaComunitario.addEventListener('change', actualizarVisibilidadComunitario);
+          actualizarVisibilidadComunitario();
+        </script>
+
         <form id="form-hu01" class="form-grid">
           <div class="form-group">
             <label for="tutor-rut">RUT (XXXXXXXX-X)</label>
