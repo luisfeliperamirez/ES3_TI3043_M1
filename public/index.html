@@ -140,6 +140,51 @@
           <pre id="hu01-json"></pre>
         </div>
       </div>
+
+      <section id="seccion-microchip" class="card hidden" aria-labelledby="titulo-microchip">
+        <h2 id="titulo-microchip">Asociación de microchip</h2>
+        <p class="help-text">Busque al animal por su animalId para asociarle un código de microchip de 15 dígitos.</p>
+
+        <form id="form-buscar-animal" class="form-grid">
+          <div class="form-group">
+            <label for="microchip-animal-id">ID del animal</label>
+            <input type="text" id="microchip-animal-id" name="animalId" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="btn-buscar-animal" class="btn btn-secondary">Buscar animal</button>
+          </div>
+        </form>
+
+        <div id="busqueda-animal-mensaje" class="alerta hidden" role="status" aria-live="polite"></div>
+        <div id="animal-encontrado" class="resultado-box hidden">
+          <h3>Animal encontrado</h3>
+          <pre id="animal-encontrado-json"></pre>
+        </div>
+
+        <form id="form-asociar-microchip" class="form-grid hidden">
+          <div class="form-group">
+            <label for="microchip-codigo">Código de microchip</label>
+            <input
+              type="text"
+              id="microchip-codigo"
+              name="microchip"
+              inputmode="numeric"
+              pattern="[0-9]{15}"
+              minlength="15"
+              maxlength="15"
+              placeholder="15 dígitos"
+              required
+            >
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="btn-asociar-microchip" class="btn btn-primary">
+              Asociar microchip
+            </button>
+          </div>
+        </form>
+
+        <div id="asociacion-microchip-mensaje" class="alerta hidden" role="status" aria-live="polite"></div>
+      </section>
     </section>
   </main>
 
