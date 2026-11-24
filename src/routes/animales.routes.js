@@ -26,6 +26,10 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
       return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No se encontró un animal con el animalId: ${animalId}`);
     }
 
+    if (animal.estado === 'fallecido') {
+      return enviarError(res, 409, 'ANIMAL_FALLECIDO', 'No se puede asociar un microchip a un animal fallecido');
+    }
+
     const animalConMicrochip = await Animal.findOne({ microchip });
 
     if (animalConMicrochip && animalConMicrochip.animalId !== animalId) {
@@ -33,6 +37,9 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
     }
 
     animal.microchip = microchip;
+    if (animal.estado === 'registrado') {
+      animal.estado = 'con_microchip';
+    }
     await animal.save();
 
     return res.status(200).json({
