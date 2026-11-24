@@ -5,7 +5,7 @@ const { enviarError } = require('../utils/errores');
 
 const router = express.Router();
 
-router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinario'), async (req, res) => {
+router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinario', 'funcionario'), async (req, res) => {
   const animalId = String(req.params.animalId || '').trim();
   const microchip = req.body && typeof req.body.microchip === 'string'
     ? req.body.microchip.trim()

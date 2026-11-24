@@ -16,6 +16,7 @@ function actualizarVistaSesion() {
   const sesion = obtenerSesion();
   const seccionLogin = document.getElementById('seccion-login');
   const panelModulo = document.getElementById('panel-modulo');
+  const seccionMicrochip = document.getElementById('seccion-microchip');
   const sesionInfo = document.getElementById('sesion-info');
   const usuarioActivo = document.getElementById('usuario-activo');
 
@@ -24,6 +25,10 @@ function actualizarVistaSesion() {
     panelModulo.classList.remove('hidden');
     sesionInfo.classList.remove('hidden');
     usuarioActivo.textContent = `${sesion.usuario.nombre || sesion.usuario.rut} (${sesion.usuario.perfil})`;
+    seccionMicrochip.classList.toggle(
+      'hidden',
+      !['veterinario', 'funcionario'].includes(sesion.usuario.perfil)
+    );
 
     const inputRut = document.getElementById('tutor-rut');
     if (inputRut && sesion.usuario.rut) {
@@ -33,6 +38,7 @@ function actualizarVistaSesion() {
     seccionLogin.classList.remove('hidden');
     panelModulo.classList.add('hidden');
     sesionInfo.classList.add('hidden');
+    seccionMicrochip.classList.add('hidden');
   }
 }
 
