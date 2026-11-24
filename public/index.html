@@ -52,86 +52,75 @@
         </p>
 
         <div id="campos-comunitario" style="display: none;">
-          <div class="form-group">
-            <label for="responsableRut">RUT del Responsable</label>
-            <input type="text" id="responsableRut" name="responsableRut" placeholder="Ej: 11111111-1">
-          </div>
-
-          <div class="form-group">
-            <label for="telefonoResponsable">Teléfono del Responsable</label>
-            <input type="text" id="telefonoResponsable" name="telefonoResponsable" placeholder="+56 9 XXXX XXXX">
-          </div>
+          <form id="form-hu03" class="form-grid">
+            <div class="form-group">
+              <label for="responsableRut">RUT del Responsable (XXXXXXXX-X)</label>
+              <input type="text" id="responsableRut" name="responsableRut" placeholder="Ej: 11111111-1">
+            </div>
 
             <div class="form-group">
-            <label for="correoResponsable">Correo del Responsable</label>
-            <input type="text" id="correoResponsable" name="correoResponsable" placeholder="responsable@correo.cl">
-          </div>
+              <label for="telefonoResponsable">Teléfono del Responsable</label>
+              <input type="text" id="telefonoResponsable" name="telefonoResponsable" placeholder="+56 9 XXXX XXXX">
+            </div>
 
-           <div class="form-group">
-            <label for="sectorAnimal">Sector donde se ubica el animal</label>
-            <input type="text" id="sectorAnimal" name="sectorAnimal" placeholder="Parque Japonés...">
-          </div>
+              <div class="form-group">
+              <label for="correoResponsable">Correo del Responsable</label>
+              <input type="text" id="correoResponsable" name="correoResponsable" placeholder="responsable@correo.cl">
+            </div>
 
-          <div class="form-group">
-            <label for="sector">Sector de Residencia/Junta de Vecinos</label>
-            <input type="text" id="sector" name="sectorResidencia" placeholder="Antofagasta, sector sur...">
-          </div>
+            <div class="form-group">
+              <label for="sectorAnimal">Sector donde se ubica el animal</label>
+              <input type="text" id="sectorAnimal" name="sectorAnimal" placeholder="Parque Japonés...">
+            </div>
+
+            <div class="form-group">
+              <label for="sector">Sector de Residencia/Junta de Vecinos</label>
+              <input type="text" id="sector" name="sectorResidencia" placeholder="Antofagasta, sector sur...">
+            </div>
+
+            <p>
+
+            </p>
+            
+
+            <div class="form-actions full-width">
+                <button type="submit" class="btn btn-primary">Guardar Ficha de Responsable</button>
+                <button type="button" id="btn-consultar-ficha-responsable" class="btn btn-secondary">Consultar Mi Ficha</button>
+            </div>
+        </form>
 
         </div>
 
-        <script>
-          const casillaComunitario = document.getElementById('comunitario-casilla');
-          const camposComunitario = document.getElementById('campos-comunitario');
-          const responsableRut = document.getElementById('responsableRut');
-          const telefonoResponsable = document.getElementById('telefonoResponsable');
-          const correoResponsable = document.getElementById('correoResponsable');
-          const sectorAnimal = document.getElementById('sectorAnimal');
-          const sectorInput = document.getElementById('sector');
+        <div id="campostutor" style="display: grid;">
 
-          function actualizarVisibilidadComunitario() {
-            const esComunitario = casillaComunitario.checked;
-            camposComunitario.style.display = esComunitario ? 'block' : 'none';
-
-           
-            if (!esComunitario) {
-              responsableRut.value = '';
-              sectorInput.value = '';
-              telefonoResponsable.value = '';
-              sectorAnimal.value = '';
-              correoResponsable.value = '';
-            }
-          }
-
-          casillaComunitario.addEventListener('change', actualizarVisibilidadComunitario);
-          actualizarVisibilidadComunitario();
-        </script>
-
-        <form id="form-hu01" class="form-grid">
-          <div class="form-group">
-            <label for="tutor-rut">RUT (XXXXXXXX-X)</label>
-            <input type="text" id="tutor-rut" placeholder="11111111-1" required>
-          </div>
-          <div class="form-group">
-            <label for="tutor-comuna">Comuna</label>
-            <input type="text" id="tutor-comuna" value="Antofagasta" readonly>
-          </div>
-          <div class="form-group full-width">
-            <label for="tutor-direccion">Dirección en Antofagasta</label>
-            <input type="text" id="tutor-direccion" placeholder="Ej: Av. Brasil 1234" required>
-          </div>
-          <div class="form-group">
-            <label for="tutor-telefono">Teléfono</label>
-            <input type="text" id="tutor-telefono" placeholder="+56912345678" required>
-          </div>
-          <div class="form-group">
-            <label for="tutor-correo">Correo electrónico</label>
-            <input type="email" id="tutor-correo" placeholder="vecino@correo.cl" required>
-          </div>
-          <div class="form-actions full-width">
-            <button type="submit" class="btn btn-primary">Guardar Ficha de Tutor</button>
-            <button type="button" id="btn-consultar-ficha" class="btn btn-secondary">Consultar Mi Ficha</button>
-          </div>
-        </form>
+          <form id="form-hu01" class="form-grid">
+            <div class="form-group">
+              <label for="tutor-rut">RUT (XXXXXXXX-X)</label>
+              <input type="text" id="tutor-rut" placeholder="11111111-1" required>
+            </div>
+            <div class="form-group">
+              <label for="tutor-comuna">Comuna</label>
+              <input type="text" id="tutor-comuna" value="Antofagasta" readonly>
+            </div>
+            <div class="form-group full-width">
+              <label for="tutor-direccion">Dirección en Antofagasta</label>
+              <input type="text" id="tutor-direccion" placeholder="Ej: Av. Brasil 1234" required>
+            </div>
+            <div class="form-group">
+              <label for="tutor-telefono">Teléfono</label>
+              <input type="text" id="tutor-telefono" placeholder="+56912345678" required>
+            </div>
+            <div class="form-group">
+              <label for="tutor-correo">Correo electrónico</label>
+              <input type="email" id="tutor-correo" placeholder="vecino@correo.cl" required>
+            </div>
+            <div class="form-actions full-width">
+              <button type="submit" class="btn btn-primary">Guardar Ficha de Tutor</button>
+              <button type="button" id="btn-consultar-ficha" class="btn btn-secondary">Consultar Mi Ficha</button>
+            </div>
+          </form>
+        
+        </div>
 
         <div id="hu01-mensaje" class="alerta hidden"></div>
 
@@ -141,7 +130,8 @@
         </div>
       </div>
 
-      <section id="seccion-microchip" class="card hidden" aria-labelledby="titulo-microchip">
+
+       <section id="seccion-microchip" class="card hidden" aria-labelledby="titulo-microchip">
         <h2 id="titulo-microchip">Asociación de microchip</h2>
         <p class="help-text">Busque al animal por su animalId para asociarle un código de microchip de 15 dígitos.</p>
 
@@ -185,10 +175,51 @@
 
         <div id="asociacion-microchip-mensaje" class="alerta hidden" role="status" aria-live="polite"></div>
       </section>
+
     </section>
   </main>
 
+   <script>
+          const casillaComunitario = document.getElementById('comunitario-casilla');
+          const camposComunitario = document.getElementById('campos-comunitario');
+          const responsableRut = document.getElementById('responsableRut');
+          const telefonoResponsable = document.getElementById('telefonoResponsable');
+          const correoResponsable = document.getElementById('correoResponsable');
+          const sectorAnimal = document.getElementById('sectorAnimal');
+          const sectorInput = document.getElementById('sector');
+
+          const tutorrut = document.getElementById('tutor-rut');
+          const tutordireccion = document.getElementById('tutor-direccion');
+          const tutortelefono = document.getElementById('tutor-telefono');
+          const tutorcorreo = document.getElementById('tutor-correo');
+         
+          function actualizarVisibilidadComunitario() {
+            const esComunitario = casillaComunitario.checked;
+            camposComunitario.style.display = esComunitario ? 'block' : 'none';
+            campostutor.style.display = casillaComunitario.checked ? 'none' : 'grid';
+           
+            if (!casillaComunitario.checked) {
+              responsableRut.value = '';
+              sectorInput.value = '';
+              telefonoResponsable.value = '';
+              sectorAnimal.value = '';
+              correoResponsable.value = '';
+            }
+            if (casillaComunitario.checked)
+            {
+              tutorrut.value = '';
+              tutordireccion.value = '';
+              tutortelefono.value = '';
+              tutorcorreo.value = '';
+            } 
+          }
+
+          casillaComunitario.addEventListener('change', actualizarVisibilidadComunitario);
+          actualizarVisibilidadComunitario();
+
+        </script>
   <script src="js/auth.js"></script>
   <script src="js/hu01-tutores.js"></script>
+  <script src="js/hu03-responsables.js"></script>
 </body>
 </html>
