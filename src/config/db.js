@@ -1,9 +1,13 @@
 const mongoose = require('mongoose');
 const Tutor = require('../models/Tutor');
+const Animal = require('../models/Animal');
 
 async function conectarDB() {
   await mongoose.connect(process.env.MONGO_URI);
   console.log('Conectado a MongoDB');
+
+  await Animal.collection.dropIndex('microchip_1').catch(() => {});
+  await Animal.syncIndexes();
 
   await Tutor.updateOne(
     { rut: '9876543-3' },

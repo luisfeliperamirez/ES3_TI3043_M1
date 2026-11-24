@@ -23,7 +23,7 @@
   <main class="container">
     <section id="seccion-login" class="card">
       <h2>Iniciar sesión con el Núcleo</h2>
-      <p class="help-text">Utilice un usuario de prueba del núcleo (clave común: <strong>tenencia2026</strong>).</p>
+      <p class="help-text">Utilice un usuario de prueba del núcleo.</p>
       <form id="form-login" class="form-grid">
         <div class="form-group">
           <label for="login-rut">RUT</label>
@@ -31,7 +31,7 @@
         </div>
         <div class="form-group">
           <label for="login-clave">Clave</label>
-          <input type="password" id="login-clave" value="tenencia2026" required>
+          <input type="password" id="login-clave" autocomplete="off" required>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Ingresar</button>
@@ -45,82 +45,32 @@
         <h2>HU-01 · Registro de Datos Personales del Tutor</h2>
         <p class="help-text">Complete sus datos de contacto en Antofagasta para habilitar la inscripción de mascotas.</p>
 
-        
-        <p>
-          <input type="checkbox" id="comunitario-casilla" name="comunitario_casilla">
-          <label for="comunitario-casilla">El animal es comunitario</label>
-        </p>
-
-        <div id="campos-comunitario" style="display: none;">
-          <form id="form-hu03" class="form-grid">
-            <div class="form-group">
-              <label for="responsableRut">RUT del Responsable (XXXXXXXX-X)</label>
-              <input type="text" id="responsableRut" name="responsableRut" placeholder="Ej: 11111111-1">
-            </div>
-
-            <div class="form-group">
-              <label for="telefonoResponsable">Teléfono del Responsable</label>
-              <input type="text" id="telefonoResponsable" name="telefonoResponsable" placeholder="+56 9 XXXX XXXX">
-            </div>
-
-              <div class="form-group">
-              <label for="correoResponsable">Correo del Responsable</label>
-              <input type="text" id="correoResponsable" name="correoResponsable" placeholder="responsable@correo.cl">
-            </div>
-
-            <div class="form-group">
-              <label for="sectorAnimal">Sector donde se ubica el animal</label>
-              <input type="text" id="sectorAnimal" name="sectorAnimal" placeholder="Parque Japonés...">
-            </div>
-
-            <div class="form-group">
-              <label for="sector">Sector de Residencia/Junta de Vecinos</label>
-              <input type="text" id="sector" name="sectorResidencia" placeholder="Antofagasta, sector sur...">
-            </div>
-
-            <p>
-
-            </p>
-            
-
-            <div class="form-actions full-width">
-                <button type="submit" class="btn btn-primary">Guardar Ficha de Responsable</button>
-                <button type="button" id="btn-consultar-ficha-responsable" class="btn btn-secondary">Consultar Mi Ficha</button>
-            </div>
+        <form id="form-hu01" class="form-grid">
+          <div class="form-group">
+            <label for="tutor-rut">RUT (XXXXXXXX-X)</label>
+            <input type="text" id="tutor-rut" placeholder="11111111-1" required>
+          </div>
+          <div class="form-group">
+            <label for="tutor-comuna">Comuna</label>
+            <input type="text" id="tutor-comuna" value="Antofagasta" readonly>
+          </div>
+          <div class="form-group full-width">
+            <label for="tutor-direccion">Dirección en Antofagasta</label>
+            <input type="text" id="tutor-direccion" placeholder="Ej: Av. Brasil 1234" required>
+          </div>
+          <div class="form-group">
+            <label for="tutor-telefono">Teléfono</label>
+            <input type="text" id="tutor-telefono" placeholder="+56912345678" required>
+          </div>
+          <div class="form-group">
+            <label for="tutor-correo">Correo electrónico</label>
+            <input type="email" id="tutor-correo" placeholder="vecino@correo.cl" required>
+          </div>
+          <div class="form-actions full-width">
+            <button type="submit" class="btn btn-primary">Guardar Ficha de Tutor</button>
+            <button type="button" id="btn-consultar-ficha" class="btn btn-secondary">Consultar Mi Ficha</button>
+          </div>
         </form>
-
-        </div>
-
-        <div id="campostutor" style="display: grid;">
-
-          <form id="form-hu01" class="form-grid">
-            <div class="form-group">
-              <label for="tutor-rut">RUT (XXXXXXXX-X)</label>
-              <input type="text" id="tutor-rut" placeholder="11111111-1" required>
-            </div>
-            <div class="form-group">
-              <label for="tutor-comuna">Comuna</label>
-              <input type="text" id="tutor-comuna" value="Antofagasta" readonly>
-            </div>
-            <div class="form-group full-width">
-              <label for="tutor-direccion">Dirección en Antofagasta</label>
-              <input type="text" id="tutor-direccion" placeholder="Ej: Av. Brasil 1234" required>
-            </div>
-            <div class="form-group">
-              <label for="tutor-telefono">Teléfono</label>
-              <input type="text" id="tutor-telefono" placeholder="+56912345678" required>
-            </div>
-            <div class="form-group">
-              <label for="tutor-correo">Correo electrónico</label>
-              <input type="email" id="tutor-correo" placeholder="vecino@correo.cl" required>
-            </div>
-            <div class="form-actions full-width">
-              <button type="submit" class="btn btn-primary">Guardar Ficha de Tutor</button>
-              <button type="button" id="btn-consultar-ficha" class="btn btn-secondary">Consultar Mi Ficha</button>
-            </div>
-          </form>
-        
-        </div>
 
         <div id="hu01-mensaje" class="alerta hidden"></div>
 
@@ -130,8 +80,79 @@
         </div>
       </div>
 
+      <div class="card">
+        <h2>HU-03 · Inscripción de Animal Comunitario</h2>
+        <p class="help-text">Marque la casilla para desplegar los requisitos y el formulario de inscripción comunitaria.</p>
 
-       <section id="seccion-microchip" class="card hidden" aria-labelledby="titulo-microchip">
+        <div class="form-group full-width" style="margin-bottom: 1rem;">
+            <label for="hu03-comunitario">
+              <input type="checkbox" id="hu03-comunitario">
+              Inscribir como animal comunitario
+            </label>
+        </div>
+
+        <div id="hu03-desplegable" class="hidden">
+          <div class="alerta" style="background-color: #f8fafc; border: 1px solid #94a3b8; color: #1e293b; margin-top: 0; margin-bottom: 1.25rem;">
+            <strong>Requisitos de inscripción comunitaria:</strong>
+            <ul style="margin-left: 1.25rem; margin-top: 0.35rem;">
+              <li>El responsable debe ser <strong>mayor de edad</strong> y no tener prohibición de tenencia.</li>
+              <li>No se exige contrato de propiedad.</li>
+              <li>Es obligatorio indicar el <strong>sector geográfico o sede de la junta de vecinos</strong> donde habita el animal.</li>
+            </ul>
+          </div>
+
+          <form id="form-hu03" class="form-grid">
+            <div class="form-group">
+              <label for="hu03-responsable-rut">RUT del Responsable (XXXXXXXX-X)</label>
+              <input type="text" id="hu03-responsable-rut" placeholder="Ej: 11111111-1" required>
+            </div>
+            <div class="form-group">
+              <label for="hu03-sector">Sector / Junta de Vecinos</label>
+              <input type="text" id="hu03-sector" placeholder="Ej: Junta de Vecinos Playa Blanca" required>
+            </div>
+            <div class="form-group">
+              <label for="hu03-nombre">Nombre del animal</label>
+              <input type="text" id="hu03-nombre" placeholder="Ej: Negrito" required>
+            </div>
+            <div class="form-group">
+              <label for="hu03-especie">Especie</label>
+              <input type="text" id="hu03-especie" placeholder="perro o gato" required>
+            </div>
+            <div class="form-group">
+              <label for="hu03-raza">Raza (o escriba Mestizo)</label>
+              <input type="text" id="hu03-raza" placeholder="Ej: Mestizo" required>
+            </div>
+            <div class="form-group">
+              <label for="hu03-raza-observada">Raza observada (si es mestizo)</label>
+              <input type="text" id="hu03-raza-observada" placeholder="Ej: Mestizo mediano pelaje negro">
+            </div>
+            <div class="form-group">
+              <label for="hu03-sexo">Sexo</label>
+              <input type="text" id="hu03-sexo" placeholder="macho o hembra" required>
+            </div>
+            <div class="form-group">
+              <label for="hu03-edad">Edad aproximada (años)</label>
+              <input type="number" id="hu03-edad" min="0" placeholder="Ej: 3" required>
+            </div>
+            <div class="form-group full-width">
+              <label for="hu03-color">Color</label>
+              <input type="text" id="hu03-color" placeholder="Ej: Negro con pecho blanco" required>
+            </div>
+            <div class="form-actions full-width">
+              <button type="submit" class="btn btn-primary">Inscribir Animal Comunitario</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="hu03-mensaje" class="alerta hidden"></div>
+
+        <div id="hu03-resultado" class="resultado-box hidden">
+          <h3>Animal Comunitario Registrado</h3>
+          <pre id="hu03-json"></pre>
+        </div>
+      </div>
+
+      <section id="seccion-microchip" class="card hidden" aria-labelledby="titulo-microchip">
         <h2 id="titulo-microchip">Asociación de microchip</h2>
         <p class="help-text">Busque al animal por su animalId para asociarle un código de microchip de 15 dígitos.</p>
 
@@ -176,50 +197,34 @@
         <div id="asociacion-microchip-mensaje" class="alerta hidden" role="status" aria-live="polite"></div>
       </section>
 
+      <div class="card">
+        <h2>HU-05 · Consulta Estandarizada de Animales</h2>
+        <p class="help-text">Consulte la ficha estandarizada de un animal por su identificador o liste los animales accesibles según su perfil.</p>
+
+        <form id="form-hu05-buscar" class="form-grid">
+          <div class="form-group">
+            <label for="hu05-animal-id">Identificador (animalId)</label>
+            <input type="text" id="hu05-animal-id" placeholder="Ej: A-000001" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Consultar Animal</button>
+            <button type="button" id="btn-hu05-listar" class="btn btn-secondary">Listar Animales</button>
+          </div>
+        </form>
+
+        <div id="hu05-mensaje" class="alerta hidden"></div>
+
+        <div id="hu05-resultado" class="resultado-box hidden">
+          <h3>Respuesta JSON Estandarizada</h3>
+          <pre id="hu05-json"></pre>
+        </div>
+      </div>
     </section>
   </main>
 
-   <script>
-          const casillaComunitario = document.getElementById('comunitario-casilla');
-          const camposComunitario = document.getElementById('campos-comunitario');
-          const responsableRut = document.getElementById('responsableRut');
-          const telefonoResponsable = document.getElementById('telefonoResponsable');
-          const correoResponsable = document.getElementById('correoResponsable');
-          const sectorAnimal = document.getElementById('sectorAnimal');
-          const sectorInput = document.getElementById('sector');
-
-          const tutorrut = document.getElementById('tutor-rut');
-          const tutordireccion = document.getElementById('tutor-direccion');
-          const tutortelefono = document.getElementById('tutor-telefono');
-          const tutorcorreo = document.getElementById('tutor-correo');
-         
-          function actualizarVisibilidadComunitario() {
-            const esComunitario = casillaComunitario.checked;
-            camposComunitario.style.display = esComunitario ? 'block' : 'none';
-            campostutor.style.display = casillaComunitario.checked ? 'none' : 'grid';
-           
-            if (!casillaComunitario.checked) {
-              responsableRut.value = '';
-              sectorInput.value = '';
-              telefonoResponsable.value = '';
-              sectorAnimal.value = '';
-              correoResponsable.value = '';
-            }
-            if (casillaComunitario.checked)
-            {
-              tutorrut.value = '';
-              tutordireccion.value = '';
-              tutortelefono.value = '';
-              tutorcorreo.value = '';
-            } 
-          }
-
-          casillaComunitario.addEventListener('change', actualizarVisibilidadComunitario);
-          actualizarVisibilidadComunitario();
-
-        </script>
   <script src="js/auth.js"></script>
   <script src="js/hu01-tutores.js"></script>
   <script src="js/hu03-responsables.js"></script>
+  <script src="js/hu05-consultas.js"></script>
 </body>
 </html>

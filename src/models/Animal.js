@@ -22,7 +22,7 @@ const animalSchema = new mongoose.Schema(
     fechaNacimiento: { type: String, default: null },
     edadAproximada: { type: Number, required: true, min: 0 },
     color: { type: String, required: true, trim: true },
-    microchip: { type: String, unique: true, sparse: true, default: null },
+    microchip: { type: String, default: undefined },
     estado: {
       type: String,
       enum: ['registrado', 'con_microchip', 'inscrito', 'fallecido'],
@@ -41,6 +41,11 @@ const animalSchema = new mongoose.Schema(
     fechaRegistro: { type: Date, default: Date.now }
   },
   { versionKey: false }
+);
+
+animalSchema.index(
+  { microchip: 1 },
+  { unique: true, partialFilterExpression: { microchip: { $type: 'string' } } }
 );
 
 module.exports = mongoose.model('Animal', animalSchema);
