@@ -81,6 +81,78 @@
       </div>
 
       <div class="card">
+        <h2>Registro de Mascota</h2>
+        <p class="help-text">Registre una mascota para vincularla al tutor autenticado. El sistema asignará su identificador.</p>
+
+        <form id="form-registrar-mascota" class="form-grid">
+          <div class="form-group">
+            <label for="mascota-especie">Especie</label>
+            <select id="mascota-especie" name="especie" required>
+              <option value="">Seleccione una especie</option>
+              <option value="perro">Perro</option>
+              <option value="gato">Gato</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mascota-raza">Raza</label>
+            <input type="text" id="mascota-raza" name="raza" required>
+          </div>
+          <div class="form-group">
+            <label for="mascota-nombre">Nombre</label>
+            <input type="text" id="mascota-nombre" name="nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="mascota-sexo">Sexo</label>
+            <input type="text" id="mascota-sexo" name="sexo" required>
+          </div>
+          <div class="form-group">
+            <label for="mascota-fecha-nacimiento">Fecha estimada de nacimiento</label>
+            <input type="date" id="mascota-fecha-nacimiento" name="fechaNacimientoEstimada" required>
+          </div>
+          <div class="form-group">
+            <label for="mascota-color">Color</label>
+            <input type="text" id="mascota-color" name="color" required>
+          </div>
+          <div class="form-actions full-width">
+            <button type="submit" class="btn btn-primary">Registrar Mascota</button>
+          </div>
+        </form>
+        <div id="mascota-mensaje" class="alerta hidden" role="status" aria-live="polite"></div>
+        <div id="mascota-resultado" class="resultado-box hidden">
+          <h3>Mascota registrada</h3>
+          <pre id="mascota-json"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Registro de fallecimiento</h2>
+        <p class="help-text">Registre la defunción para actualizar el estado del animal.</p>
+
+        <form id="form-registrar-defuncion" class="form-grid">
+          <div class="form-group">
+            <label for="defuncion-animal-id">ID del animal</label>
+            <input type="text" id="defuncion-animal-id" name="animalId" placeholder="Ej: A-000123" required>
+          </div>
+          <div class="form-group">
+            <label for="defuncion-fecha">Fecha de defunción</label>
+            <input type="date" id="defuncion-fecha" name="fechaDefuncion" required>
+          </div>
+          <div class="form-group full-width">
+            <label for="defuncion-causa">Causa (opcional)</label>
+            <input type="text" id="defuncion-causa" name="causaDefuncion">
+          </div>
+          <div class="form-actions full-width">
+            <button type="submit" class="btn btn-primary">Registrar fallecimiento</button>
+          </div>
+        </form>
+        <div id="defuncion-mensaje" class="alerta hidden" role="status" aria-live="polite"></div>
+        <div id="defuncion-resultado" class="resultado-box hidden">
+          <h3>Fallecimiento registrado</h3>
+          <pre id="defuncion-json"></pre>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>HU-03 · Inscripción de Animal Comunitario</h2>
         <p class="help-text">Marque la casilla para desplegar los requisitos y el formulario de inscripción comunitaria.</p>
 
@@ -227,5 +299,69 @@
   <script src="js/hu03-responsables.js"></script>
   <script src="js/hu05-consultas.js"></script>
   <script src="js/hu04-microchip.js"></script>
+  <script>
+    (() => {
+      const mostrarMensaje = (elemento, texto, correcto) => {
+        elemento.textContent = texto;
+        elemento.classList.remove('hidden', 'alerta-ok', 'alerta-error');
+        elemento.classList.add(correcto ? 'alerta-ok' : 'alerta-error');
+      };
+
+      const enviar = async (url, datos) => {
+        const respuesta = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        });
+        const resultado = await respuesta.json().catch(() => ({}));
+        if (!respuesta.ok) {
+          throw new Error(resultado.mensaje || resultado.message || 'No se pudo completar la solicitud.');
+        }
+        return resultado;
+      };
+
+      document.getElementById('form-registrar-mascota').addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const formulario = evento.currentTarget;
+        const mensaje = document.getElementById('mascota-mensaje');
+        const resultado = document.getElementById('mascota-resultado');
+        resultado.classList.add('hidden');
+        const datos = Object.fromEntries(new FormData(formulario).entries());
+
+        try {
+          const mascota = await enviar('/api/tutores/mascotas', datos);
+          document.getElementById('mascota-json').textContent = JSON.stringify(mascota, null, 2);
+          resultado.classList.remove('hidden');
+          mostrarMensaje(mensaje, 'Mascota registrada correctamente.', true);
+          formulario.reset();
+        } catch (error) {
+          mostrarMensaje(mensaje, error.message, false);
+        }
+      });
+
+      document.getElementById('form-registrar-defuncion').addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const formulario = evento.currentTarget;
+        const mensaje = document.getElementById('defuncion-mensaje');
+        const resultado = document.getElementById('defuncion-resultado');
+        resultado.classList.add('hidden');
+        const datos = Object.fromEntries(new FormData(formulario).entries());
+        const animalId = encodeURIComponent(datos.animalId.trim());
+        delete datos.animalId;
+        if (!datos.causaDefuncion.trim()) delete datos.causaDefuncion;
+
+        try {
+          const animal = await enviar(`/api/animales/${animalId}/defuncion`, datos);
+          document.getElementById('defuncion-json').textContent = JSON.stringify(animal, null, 2);
+          resultado.classList.remove('hidden');
+          mostrarMensaje(mensaje, 'Fallecimiento registrado correctamente.', true);
+          formulario.reset();
+        } catch (error) {
+          mostrarMensaje(mensaje, error.message, false);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
