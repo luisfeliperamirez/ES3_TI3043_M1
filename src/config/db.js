@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Tutor = require('../models/Tutor');
 const Animal = require('../models/Animal');
+const Microchip = require('../models/Microchip');
 
 async function conectarDB() {
   await mongoose.connect(process.env.MONGO_URI);
@@ -8,6 +9,7 @@ async function conectarDB() {
 
   await Animal.collection.dropIndex('microchip_1').catch(() => {});
   await Animal.syncIndexes();
+  await Microchip.syncIndexes();
 
   await Tutor.updateOne(
     { rut: '9876543-3' },

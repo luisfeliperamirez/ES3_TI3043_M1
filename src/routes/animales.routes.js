@@ -1,5 +1,6 @@
 const express = require('express');
 const Animal = require('../models/Animal');
+const Microchip = require('../models/Microchip');
 const Tutor = require('../models/Tutor');
 const Contador = require('../models/Contador');
 const { verificarToken, permitirPerfiles } = require('../middlewares/auth');
@@ -7,6 +8,26 @@ const { limpiarRut, validarRutChileno } = require('../utils/rut');
 const { enviarError } = require('../utils/errores');
 
 const router = express.Router();
+
+async function consultarAnimalNucleo(animalId, token) {
+  try {
+    const respuesta = await fetch(
+      `${process.env.NUCLEO_URL}/api/registro/animales/${encodeURIComponent(animalId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json'
+        }
+      }
+    );
+
+    if (respuesta.status === 404) return null;
+    if (!respuesta.ok) throw new Error('NUCLEO_NO_DISPONIBLE');
+    return await respuesta.json();
+  } catch (error) {
+    throw new Error('NUCLEO_NO_DISPONIBLE');
+  }
+}
 
 function formatearAnimal(animal) {
   return {
@@ -307,6 +328,21 @@ router.get('/', verificarToken, async (req, res) => {
 router.get('/:animalId', verificarToken, async (req, res) => {
   try {
     const animalId = String(req.params.animalId || '').trim().toUpperCase();
+
+    if (animalId.startsWith('SIM-')) {
+      const animalNucleo = await consultarAnimalNucleo(animalId, req.token);
+      if (!animalNucleo) {
+        return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No existe un animal con identificador ${animalId}`);
+      }
+
+      const asociacion = await Microchip.findOne({ animalId });
+      if (asociacion) {
+        animalNucleo.microchip = asociacion.microchip;
+        animalNucleo.estado = 'con_microchip';
+      }
+      return res.status(200).json(animalNucleo);
+    }
+
     const animal = await Animal.findOne({ animalId });
 
     if (!animal) {
@@ -326,12 +362,15 @@ router.get('/:animalId', verificarToken, async (req, res) => {
 
     return res.status(200).json(formatearAnimal(animal));
   } catch (error) {
+    if (error.message === 'NUCLEO_NO_DISPONIBLE') {
+      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo consultar el animal en el núcleo');
+    }
     return enviarError(res, 500, 'ERROR_INTERNO', 'Ocurrió un error al consultar el animal');
   }
 });
 
 router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinario', 'funcionario'), async (req, res) => {
-  const animalId = String(req.params.animalId || '').trim();
+  const animalId = String(req.params.animalId || '').trim().toUpperCase();
   const microchip = req.body && typeof req.body.microchip === 'string'
     ? req.body.microchip.trim()
     : '';
@@ -345,7 +384,10 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
   }
 
   try {
-    const animal = await Animal.findOne({ animalId });
+    const esAnimalSimulado = animalId.toUpperCase().startsWith('SIM-');
+    const animal = esAnimalSimulado
+      ? await consultarAnimalNucleo(animalId, req.token)
+      : await Animal.findOne({ animalId });
 
     if (!animal) {
       return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No se encontró un animal con el animalId: ${animalId}`);
@@ -355,24 +397,66 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
       return enviarError(res, 409, 'ANIMAL_FALLECIDO', 'No se puede asociar un microchip a un animal fallecido');
     }
 
-    const animalConMicrochip = await Animal.findOne({ microchip });
+    const asociacionExistente = esAnimalSimulado
+      ? await Microchip.findOne({ animalId })
+      : null;
+    if (asociacionExistente || animal.microchip || animal.estado === 'con_microchip') {
+      return enviarError(res, 409, 'ANIMAL_YA_MICROCHIPEADO', 'El animal ya tiene un microchip asociado');
+    }
 
-    if (animalConMicrochip && animalConMicrochip.animalId !== animalId) {
+    const animalConMicrochip = await Microchip.findOne({ microchip })
+      || await Animal.findOne({ microchip });
+
+    if (animalConMicrochip) {
       return enviarError(res, 409, 'MICROCHIP_REGISTRADO', 'Microchip ya registrado');
     }
 
-    animal.microchip = microchip;
-    if (animal.estado === 'registrado') {
+    if (esAnimalSimulado) {
+      const asociacion = await Microchip.create({ animalId, microchip });
+      animal.microchip = asociacion.microchip;
       animal.estado = 'con_microchip';
+
+      return res.status(200).json({
+        ok: true,
+        mensaje: 'Microchip asignado correctamente',
+        animal
+      });
     }
-    await animal.save();
+
+    const camposActualizados = { microchip };
+    if (animal.estado === 'registrado') {
+      camposActualizados.estado = 'con_microchip';
+    }
+
+    const animalActualizado = await Animal.findOneAndUpdate(
+      { animalId },
+      { $set: camposActualizados },
+      { new: true, runValidators: false }
+    );
+    if (!animalActualizado) {
+      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No se encontró un animal con el animalId: ${animalId}`);
+    }
 
     return res.status(200).json({
       ok: true,
       mensaje: 'Microchip asignado correctamente',
-      animal
+      animal: animalActualizado
     });
   } catch (error) {
+    if (error && error.code === 11000) {
+      const codigoDuplicado = error.keyPattern
+        ? error.keyPattern.microchip
+        : error.message && error.message.includes('microchip_1');
+      if (codigoDuplicado) {
+        return enviarError(res, 409, 'MICROCHIP_REGISTRADO', 'Microchip ya registrado');
+      }
+      return enviarError(res, 409, 'ANIMAL_YA_MICROCHIPEADO', 'El animal ya tiene un microchip asociado');
+    }
+
+    if (error.message === 'NUCLEO_NO_DISPONIBLE') {
+      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo consultar el animal en el núcleo');
+    }
+
     console.error('Error al asignar microchip:', error);
     return enviarError(res, 500, 'ERROR_INTERNO', 'Ocurrió un error al asignar el microchip');
   }
