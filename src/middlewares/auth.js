@@ -1,5 +1,7 @@
 const { enviarError } = require('../utils/errores');
 
+const perfilesValidos = new Set(['vecino', 'comunitario', 'funcionario', 'veterinario', 'admin']);
+
 async function verificarToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -29,6 +31,10 @@ async function verificarToken(req, res, next) {
     }
 
     const datos = await respuesta.json();
+    if (!datos || !perfilesValidos.has(datos.perfil)) {
+      return enviarError(res, 403, 'PERFIL_NO_AUTORIZADO', 'El perfil del usuario no está habilitado para este módulo');
+    }
+
     req.usuario = datos;
     req.token = token;
     return next();

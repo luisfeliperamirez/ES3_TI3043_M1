@@ -121,7 +121,11 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'funcionario', 'admi
   }
 });
 
-router.get('/:rut', verificarToken, async (req, res) => {
+router.get(
+  '/:rut',
+  verificarToken,
+  permitirPerfiles('vecino', 'comunitario', 'funcionario', 'admin'),
+  async (req, res) => {
   try {
     const rutLimpio = limpiarRut(req.params.rut);
     if (!validarRutChileno(rutLimpio)) {
@@ -159,7 +163,8 @@ router.get('/:rut', verificarToken, async (req, res) => {
       animalesACargo: mascotasPropias.length,
       animalesComunitarios: mascotasComunitarias.length,
       animalIds
-    });
+      }
+    );
   } catch (error) {
     if (error.message === 'NUCLEO_ERROR') {
       return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo consultar el usuario en el núcleo');

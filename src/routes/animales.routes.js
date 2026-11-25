@@ -1,35 +1,23 @@
 const express = require('express');
 const Animal = require('../models/Animal');
-const Microchip = require('../models/Microchip');
 const Tutor = require('../models/Tutor');
 const Contador = require('../models/Contador');
 const { verificarToken, permitirPerfiles } = require('../middlewares/auth');
 const { limpiarRut, validarRutChileno } = require('../utils/rut');
+const { normalizarFechaUtc } = require('../utils/fecha');
 const { enviarError } = require('../utils/errores');
 
 const router = express.Router();
 
-async function consultarAnimalNucleo(animalId, token) {
-  try {
-    const respuesta = await fetch(
-      `${process.env.NUCLEO_URL}/api/registro/animales/${encodeURIComponent(animalId)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json'
-        }
-      }
-    );
-
-    if (respuesta.status === 404) return null;
-    if (!respuesta.ok) throw new Error('NUCLEO_NO_DISPONIBLE');
-    return await respuesta.json();
-  } catch (error) {
-    throw new Error('NUCLEO_NO_DISPONIBLE');
-  }
-}
-
 function formatearAnimal(animal) {
+  const fechaNacimiento = animal.fechaNacimiento
+    ? normalizarFechaUtc(animal.fechaNacimiento)
+    : null;
+
+  if (animal.fechaNacimiento && !fechaNacimiento) {
+    throw new Error('FECHA_ALMACENADA_INVALIDA');
+  }
+
   return {
     animalId: animal.animalId,
     especie: animal.especie,
@@ -39,6 +27,7 @@ function formatearAnimal(animal) {
     razaObservada: animal.razaObservada,
     nombre: animal.nombre,
     sexo: animal.sexo,
+    fechaNacimiento,
     edadAproximada: animal.edadAproximada,
     color: animal.color,
     microchip: animal.microchip || null,
@@ -47,6 +36,8 @@ function formatearAnimal(animal) {
     comunitario: animal.comunitario,
     responsableRut: animal.responsableRut,
     sector: animal.sector,
+    historialTutores: animal.historialTutores || [],
+    defuncion: animal.defuncion || { fecha: null, causa: null, respaldo: null },
     fechaRegistro: animal.fechaRegistro ? animal.fechaRegistro.toISOString() : null
   };
 }
@@ -67,7 +58,8 @@ async function consultarUsuarioNucleo(rut, token) {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json'
     }
-  });
+    }
+  );
 
   if (respuesta.status === 404) {
     return { encontrado: false };
@@ -88,15 +80,29 @@ function esMayorDeEdad(usuarioNucleo) {
     const nacimiento = new Date(usuarioNucleo.fechaNacimiento);
     if (!Number.isNaN(nacimiento.getTime())) {
       const hoy = new Date();
-      let edad = hoy.getFullYear() - nacimiento.getFullYear();
-      const mes = hoy.getMonth() - nacimiento.getMonth();
-      if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      let edad = hoy.getUTCFullYear() - nacimiento.getUTCFullYear();
+      const mes = hoy.getUTCMonth() - nacimiento.getUTCMonth();
+      if (mes < 0 || (mes === 0 && hoy.getUTCDate() < nacimiento.getUTCDate())) {
         edad -= 1;
       }
       return edad >= 18;
     }
   }
   return true;
+}
+
+function calcularEdadDesdeFecha(fechaTexto) {
+  if (!fechaTexto) return null;
+  const nacimiento = new Date(fechaTexto);
+  if (Number.isNaN(nacimiento.getTime())) return null;
+  const hoy = new Date();
+  if (nacimiento > hoy) return null;
+  let anios = hoy.getUTCFullYear() - nacimiento.getUTCFullYear();
+  const mes = hoy.getUTCMonth() - nacimiento.getUTCMonth();
+  if (mes < 0 || (mes === 0 && hoy.getUTCDate() < nacimiento.getUTCDate())) {
+    anios -= 1;
+  }
+  return Math.max(0, anios);
 }
 
 router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'funcionario', 'admin'), async (req, res) => {
@@ -110,6 +116,7 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'func
       nombre,
       sexo,
       fechaNacimiento,
+      fechaNacimientoEstimada,
       edadAproximada,
       color,
       comunitario,
@@ -134,9 +141,18 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'func
       return enviarError(res, 400, 'SEXO_INVALIDO', 'El sexo del animal debe ser macho o hembra');
     }
 
-    const edadNumero = Number(edadAproximada);
-    if (edadAproximada === undefined || edadAproximada === null || Number.isNaN(edadNumero) || edadNumero < 0) {
-      return enviarError(res, 400, 'EDAD_INVALIDA', 'La edad aproximada del animal es obligatoria');
+    const fechaRaw = fechaNacimiento || fechaNacimientoEstimada || null;
+    const fechaNacFinal = fechaRaw ? normalizarFechaUtc(fechaRaw) : null;
+    if (fechaRaw && !fechaNacFinal) {
+      return enviarError(res, 400, 'FECHA_NACIMIENTO_INVALIDA', 'La fecha de nacimiento debe ser una fecha ISO 8601 válida');
+    }
+
+    let edadNumero = edadAproximada !== undefined && edadAproximada !== null && edadAproximada !== ''
+      ? Number(edadAproximada)
+      : calcularEdadDesdeFecha(fechaNacFinal);
+
+    if (edadNumero === null || Number.isNaN(edadNumero) || edadNumero < 0) {
+      return enviarError(res, 400, 'EDAD_INVALIDA', 'Debe indicar una fecha de nacimiento válida o edad aproximada');
     }
 
     if (!color || typeof color !== 'string' || !color.trim()) {
@@ -193,7 +209,7 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'func
         razaObservada: razaObservadaFinal,
         nombre: nombre.trim(),
         sexo: sexoLimpio,
-        fechaNacimiento: fechaNacimiento || null,
+        fechaNacimiento: fechaNacFinal,
         edadAproximada: edadNumero,
         color: color.trim(),
         estado: 'registrado',
@@ -217,7 +233,7 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'func
 
     const tutorRegistrado = await Tutor.findOne({ rut: rutTutorLimpio });
     if (!tutorRegistrado) {
-      return enviarError(res, 404, 'TUTOR_NO_ENCONTRADO', 'Debe registrar primero los datos personales del tutor');
+      return enviarError(res, 404, 'TUTOR_NO_ENCONTRADO', 'Debe registrar primero los datos personales del tutor en HU-01');
     }
 
     if (tutorRegistrado.prohibicionTenencia) {
@@ -234,7 +250,7 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'func
       razaObservada: razaObservadaFinal,
       nombre: nombre.trim(),
       sexo: sexoLimpio,
-      fechaNacimiento: fechaNacimiento || null,
+      fechaNacimiento: fechaNacFinal,
       edadAproximada: edadNumero,
       color: color.trim(),
       estado: 'registrado',
@@ -248,13 +264,17 @@ router.post('/', verificarToken, permitirPerfiles('vecino', 'comunitario', 'func
   } catch (error) {
     console.error('Error al registrar animal:', error);
     if (error.message === 'NUCLEO_ERROR') {
-      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo validar el responsable en el núcleo');
+      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo validar el usuario en el núcleo');
     }
     return enviarError(res, 500, 'ERROR_INTERNO', 'Ocurrió un error al registrar el animal');
   }
 });
 
-router.get('/', verificarToken, async (req, res) => {
+router.get(
+  '/',
+  verificarToken,
+  permitirPerfiles('vecino', 'comunitario', 'funcionario', 'veterinario', 'admin'),
+  async (req, res) => {
   try {
     const { tutorRut, responsableRut, estado, especie } = req.query;
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -323,26 +343,16 @@ router.get('/', verificarToken, async (req, res) => {
   } catch (error) {
     return enviarError(res, 500, 'ERROR_INTERNO', 'Ocurrió un error al listar los animales');
   }
-});
+  }
+);
 
-router.get('/:animalId', verificarToken, async (req, res) => {
+router.get(
+  '/:animalId',
+  verificarToken,
+  permitirPerfiles('vecino', 'comunitario', 'funcionario', 'veterinario', 'admin'),
+  async (req, res) => {
   try {
     const animalId = String(req.params.animalId || '').trim().toUpperCase();
-
-    if (animalId.startsWith('SIM-')) {
-      const animalNucleo = await consultarAnimalNucleo(animalId, req.token);
-      if (!animalNucleo) {
-        return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No existe un animal con identificador ${animalId}`);
-      }
-
-      const asociacion = await Microchip.findOne({ animalId });
-      if (asociacion) {
-        animalNucleo.microchip = asociacion.microchip;
-        animalNucleo.estado = 'con_microchip';
-      }
-      return res.status(200).json(animalNucleo);
-    }
-
     const animal = await Animal.findOne({ animalId });
 
     if (!animal) {
@@ -362,9 +372,6 @@ router.get('/:animalId', verificarToken, async (req, res) => {
 
     return res.status(200).json(formatearAnimal(animal));
   } catch (error) {
-    if (error.message === 'NUCLEO_NO_DISPONIBLE') {
-      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo consultar el animal en el núcleo');
-    }
     return enviarError(res, 500, 'ERROR_INTERNO', 'Ocurrió un error al consultar el animal');
   }
 });
@@ -384,10 +391,7 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
   }
 
   try {
-    const esAnimalSimulado = animalId.toUpperCase().startsWith('SIM-');
-    const animal = esAnimalSimulado
-      ? await consultarAnimalNucleo(animalId, req.token)
-      : await Animal.findOne({ animalId });
+    const animal = await Animal.findOne({ animalId });
 
     if (!animal) {
       return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No se encontró un animal con el animalId: ${animalId}`);
@@ -397,69 +401,171 @@ router.patch('/:animalId/microchip', verificarToken, permitirPerfiles('veterinar
       return enviarError(res, 409, 'ANIMAL_FALLECIDO', 'No se puede asociar un microchip a un animal fallecido');
     }
 
-    const asociacionExistente = esAnimalSimulado
-      ? await Microchip.findOne({ animalId })
-      : null;
-    if (asociacionExistente || animal.microchip || animal.estado === 'con_microchip') {
+    if (animal.microchip || animal.estado === 'con_microchip' || animal.estado === 'inscrito') {
       return enviarError(res, 409, 'ANIMAL_YA_MICROCHIPEADO', 'El animal ya tiene un microchip asociado');
     }
 
-    const animalConMicrochip = await Microchip.findOne({ microchip })
-      || await Animal.findOne({ microchip });
-
-    if (animalConMicrochip) {
+    const animalConMicrochip = await Animal.findOne({ microchip });
+    if (animalConMicrochip && animalConMicrochip.animalId !== animalId) {
       return enviarError(res, 409, 'MICROCHIP_REGISTRADO', 'Microchip ya registrado');
     }
 
-    if (esAnimalSimulado) {
-      const asociacion = await Microchip.create({ animalId, microchip });
-      animal.microchip = asociacion.microchip;
-      animal.estado = 'con_microchip';
-
-      return res.status(200).json({
-        ok: true,
-        mensaje: 'Microchip asignado correctamente',
-        animal
-      });
-    }
-
-    const camposActualizados = { microchip };
+    animal.microchip = microchip;
     if (animal.estado === 'registrado') {
-      camposActualizados.estado = 'con_microchip';
+      animal.estado = 'con_microchip';
     }
-
-    const animalActualizado = await Animal.findOneAndUpdate(
-      { animalId },
-      { $set: camposActualizados },
-      { new: true, runValidators: false }
-    );
-    if (!animalActualizado) {
-      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No se encontró un animal con el animalId: ${animalId}`);
-    }
+    await animal.save();
 
     return res.status(200).json({
       ok: true,
       mensaje: 'Microchip asignado correctamente',
-      animal: animalActualizado
+      animal: formatearAnimal(animal)
     });
   } catch (error) {
     if (error && error.code === 11000) {
-      const codigoDuplicado = error.keyPattern
-        ? error.keyPattern.microchip
-        : error.message && error.message.includes('microchip_1');
-      if (codigoDuplicado) {
-        return enviarError(res, 409, 'MICROCHIP_REGISTRADO', 'Microchip ya registrado');
-      }
-      return enviarError(res, 409, 'ANIMAL_YA_MICROCHIPEADO', 'El animal ya tiene un microchip asociado');
+      return enviarError(res, 409, 'MICROCHIP_REGISTRADO', 'Microchip ya registrado');
     }
-
-    if (error.message === 'NUCLEO_NO_DISPONIBLE') {
-      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo consultar el animal en el núcleo');
-    }
-
     console.error('Error al asignar microchip:', error);
     return enviarError(res, 500, 'ERROR_INTERNO', 'Ocurrió un error al asignar el microchip');
   }
 });
+
+router.patch('/:animalId/inscribir', verificarToken, permitirPerfiles('funcionario', 'admin'), async (req, res) => {
+  try {
+    const animalId = String(req.params.animalId || '').trim().toUpperCase();
+    const animal = await Animal.findOne({ animalId });
+
+    if (!animal) {
+      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No existe un animal con identificador ${animalId}`);
+    }
+
+    if (animal.estado === 'fallecido') {
+      return enviarError(res, 409, 'ANIMAL_FALLECIDO', 'No se puede inscribir un animal fallecido');
+    }
+
+    if (animal.estado !== 'con_microchip') {
+      return enviarError(res, 409, 'TRANSICION_INVALIDA', 'El animal debe estar en estado con_microchip antes de marcarse como inscrito');
+    }
+
+    animal.estado = 'inscrito';
+    await animal.save();
+
+    return res.status(200).json(formatearAnimal(animal));
+  } catch (error) {
+    return enviarError(res, 500, 'ERROR_INTERNO', 'Error al actualizar el estado a inscrito');
+  }
+});
+
+router.patch('/:animalId/tutor', verificarToken, permitirPerfiles('funcionario', 'admin'), async (req, res) => {
+  try {
+    const animalId = String(req.params.animalId || '').trim().toUpperCase();
+    const { tutorRut } = req.body;
+
+    if (tutorRut !== null && typeof tutorRut !== 'string') {
+      return enviarError(res, 400, 'RUT_INVALIDO', 'Debe enviar tutorRut como string o null');
+    }
+
+    const nuevoRut = tutorRut === null ? null : limpiarRut(tutorRut);
+    if (nuevoRut !== null && !validarRutChileno(nuevoRut)) {
+      return enviarError(res, 400, 'RUT_INVALIDO', 'El formato del RUT del nuevo tutor no es válido');
+    }
+
+    const animal = await Animal.findOne({ animalId });
+    if (!animal) {
+      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No existe un animal con identificador ${animalId}`);
+    }
+
+    if (animal.estado === 'fallecido') {
+      return enviarError(res, 409, 'ANIMAL_FALLECIDO', 'No se puede cambiar el tutor de un animal fallecido');
+    }
+
+    if (nuevoRut !== null) {
+      const tutorLocal = await Tutor.findOne({ rut: nuevoRut });
+      if (tutorLocal && tutorLocal.prohibicionTenencia) {
+        return enviarError(res, 409, 'PROHIBICION_TENENCIA', 'El nuevo tutor figura con prohibición de tenencia');
+      }
+
+      const consultaNucleo = await consultarUsuarioNucleo(nuevoRut, req.token);
+      if (!consultaNucleo.encontrado) {
+        return enviarError(res, 404, 'USUARIO_NO_ENCONTRADO', 'El RUT indicado no existe en el núcleo');
+      }
+
+      if (consultaNucleo.datos.prohibicionTenencia === true) {
+        return enviarError(res, 409, 'PROHIBICION_TENENCIA', 'El nuevo tutor figura con prohibición de tenencia');
+      }
+    }
+
+    const ahora = new Date();
+    if (Array.isArray(animal.historialTutores) && animal.historialTutores.length > 0) {
+      const ultimo = animal.historialTutores[animal.historialTutores.length - 1];
+      if (!ultimo.fechaHasta) {
+        ultimo.fechaHasta = ahora;
+      }
+    }
+
+    if (nuevoRut !== null) {
+      animal.historialTutores.push({
+        tutorRut: nuevoRut,
+        fechaDesde: ahora,
+        fechaHasta: null
+      });
+      animal.tutorRut = nuevoRut;
+      animal.comunitario = false;
+      animal.responsableRut = null;
+    } else {
+      animal.tutorRut = null;
+    }
+
+    await animal.save();
+    return res.status(200).json(formatearAnimal(animal));
+  } catch (error) {
+    if (error.message === 'NUCLEO_ERROR') {
+      return enviarError(res, 503, 'NUCLEO_NO_DISPONIBLE', 'No se pudo validar el nuevo tutor en el núcleo');
+    }
+    return enviarError(res, 500, 'ERROR_INTERNO', 'Error al actualizar el tutor del animal');
+  }
+});
+
+async function manejarDefuncion(req, res) {
+  try {
+    const animalId = String(req.params.animalId || '').trim().toUpperCase();
+    const fechaRaw = req.body.fechaDefuncion || req.body.fecha;
+    const causaRaw = req.body.causaDefuncion || req.body.causa || null;
+    const respaldoRaw = req.body.respaldo || null;
+
+    if (!fechaRaw) {
+      return enviarError(res, 400, 'FECHA_REQUERIDA', 'La fecha de defunción es obligatoria');
+    }
+
+    const fechaDefUtc = normalizarFechaUtc(fechaRaw);
+    if (!fechaDefUtc) {
+      return enviarError(res, 400, 'FECHA_INVALIDA', 'La fecha de defunción debe ser una fecha ISO 8601 válida');
+    }
+
+    const animal = await Animal.findOne({ animalId });
+    if (!animal) {
+      return enviarError(res, 404, 'ANIMAL_NO_ENCONTRADO', `No existe un animal con identificador ${animalId}`);
+    }
+
+    if (animal.estado === 'fallecido') {
+      return enviarError(res, 409, 'ANIMAL_YA_FALLECIDO', 'El animal ya se encuentra registrado como fallecido');
+    }
+
+    animal.estado = 'fallecido';
+    animal.defuncion = {
+      fecha: new Date(fechaDefUtc),
+      causa: causaRaw ? String(causaRaw).trim() : null,
+      respaldo: respaldoRaw ? String(respaldoRaw).trim() : null
+    };
+    await animal.save();
+
+    return res.status(200).json(formatearAnimal(animal));
+  } catch (error) {
+    return enviarError(res, 500, 'ERROR_INTERNO', 'Error al registrar la defunción del animal');
+  }
+}
+
+router.patch('/:animalId/defuncion', verificarToken, permitirPerfiles('funcionario', 'veterinario', 'admin'), manejarDefuncion);
+router.post('/:animalId/defuncion', verificarToken, permitirPerfiles('funcionario', 'veterinario', 'admin'), manejarDefuncion);
 
 module.exports = router;

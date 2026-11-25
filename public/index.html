@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -307,33 +307,45 @@
         elemento.classList.add(correcto ? 'alerta-ok' : 'alerta-error');
       };
 
-      const enviar = async (url, datos) => {
+      const enviarConToken = async (url, metodo, datos) => {
+        const sesion = obtenerSesion();
+        if (!sesion) {
+          throw new Error('Debe iniciar sesión para realizar esta operación.');
+        }
+
         const respuesta = await fetch(url, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
+          method: metodo,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${sesion.token}`
+          },
           body: JSON.stringify(datos)
         });
         const resultado = await respuesta.json().catch(() => ({}));
         if (!respuesta.ok) {
-          throw new Error(resultado.mensaje || resultado.message || 'No se pudo completar la solicitud.');
+          throw new Error(resultado.error?.mensaje || resultado.mensaje || 'No se pudo completar la solicitud.');
         }
         return resultado;
       };
 
       document.getElementById('form-registrar-mascota').addEventListener('submit', async (evento) => {
         evento.preventDefault();
+        const sesion = obtenerSesion();
         const formulario = evento.currentTarget;
         const mensaje = document.getElementById('mascota-mensaje');
         const resultado = document.getElementById('mascota-resultado');
         resultado.classList.add('hidden');
         const datos = Object.fromEntries(new FormData(formulario).entries());
+        datos.comunitario = false;
+        if (sesion && sesion.usuario && sesion.usuario.rut) {
+          datos.tutorRut = sesion.usuario.rut;
+        }
 
         try {
-          const mascota = await enviar('/api/tutores/mascotas', datos);
+          const mascota = await enviarConToken('/api/registro/animales', 'POST', datos);
           document.getElementById('mascota-json').textContent = JSON.stringify(mascota, null, 2);
           resultado.classList.remove('hidden');
-          mostrarMensaje(mensaje, 'Mascota registrada correctamente.', true);
+          mostrarMensaje(mensaje, `Mascota registrada correctamente con ID ${mascota.animalId}.`, true);
           formulario.reset();
         } catch (error) {
           mostrarMensaje(mensaje, error.message, false);
@@ -347,15 +359,17 @@
         const resultado = document.getElementById('defuncion-resultado');
         resultado.classList.add('hidden');
         const datos = Object.fromEntries(new FormData(formulario).entries());
-        const animalId = encodeURIComponent(datos.animalId.trim());
+        const animalId = encodeURIComponent(datos.animalId.trim().toUpperCase());
         delete datos.animalId;
-        if (!datos.causaDefuncion.trim()) delete datos.causaDefuncion;
+        if (!datos.causaDefuncion || !datos.causaDefuncion.trim()) {
+          delete datos.causaDefuncion;
+        }
 
         try {
-          const animal = await enviar(`/api/animales/${animalId}/defuncion`, datos);
+          const animal = await enviarConToken(`/api/registro/animales/${animalId}/defuncion`, 'PATCH', datos);
           document.getElementById('defuncion-json').textContent = JSON.stringify(animal, null, 2);
           resultado.classList.remove('hidden');
-          mostrarMensaje(mensaje, 'Fallecimiento registrado correctamente.', true);
+          mostrarMensaje(mensaje, `Fallecimiento registrado correctamente para ${animal.animalId}.`, true);
           formulario.reset();
         } catch (error) {
           mostrarMensaje(mensaje, error.message, false);

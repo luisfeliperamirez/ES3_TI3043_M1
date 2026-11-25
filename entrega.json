@@ -1,0 +1,144 @@
+{
+  "seccion": "FB50-C1",
+  "modulo": 1,
+  "grupo": "G01",
+  "prototipo": "https://es3-ti3043-m1.onrender.com",
+  "repositorio": "https://github.com/luisfeliperamirez/ES3_TI3043_M1",
+  "taiga": "https://tree.taiga.io/project/gabrielbenavides-p13-c1-grupo-01",
+  "integrantes": [
+    {
+      "nombre": "Luis-Felipe Ramirez",
+      "github": "luisfeliperamirez",
+      "taiga": "luis4276",
+      "rol": "SM"
+    },
+    {
+      "nombre": "Gabriel Benavides",
+      "github": "HGabriel-Academic",
+      "taiga": "Gabriel.Benavides",
+      "rol": "PO"
+    },
+    {
+      "nombre": "Simón Sepúlveda",
+      "github": "simon1234567891011121314",
+      "taiga": "simon1",
+      "rol": "Calidad"
+    },
+    {
+      "nombre": "Nicolas Chavez",
+      "github": "nico-lol",
+      "taiga": "nicolas.chavez24",
+      "rol": "Analista"
+    },
+    {
+      "nombre": "Scarlett Aguilera",
+      "github": "USUARIO_GITHUB_SCARLETT",
+      "taiga": "USUARIO_TAIGA_SCARLETT",
+      "rol": "Arquitecto"
+    }
+  ],
+  "historias": [
+    {
+      "id": "HU-01",
+      "titulo": "Registro de datos personales del tutor en la plataforma municipal",
+      "responsable": "luisfeliperamirez",
+      "verificacion": {
+        "metodo": "POST",
+        "ruta": "/api/registro/tutores",
+        "perfil": "funcionario",
+        "cuerpo": {
+          "rut": "11111111-1",
+          "direccion": "Av. Brasil 1234",
+          "comuna": "Antofagasta",
+          "telefono": "+56912345678",
+          "correo": "tutor@correo.cl"
+        },
+        "esperado": 201
+      }
+    },
+    {
+      "id": "HU-02",
+      "titulo": "Registro de datos de mascota vinculada al perfil del tutor",
+      "responsable": "HGabriel-Academic",
+      "verificacion": {
+        "metodo": "POST",
+        "ruta": "/api/registro/animales",
+        "perfil": "funcionario",
+        "cuerpo": {
+          "especie": "perro",
+          "raza": "Labrador Retriever",
+          "nombre": "Cholito",
+          "sexo": "macho",
+          "edadAproximada": 4,
+          "color": "Negro",
+          "comunitario": false,
+          "tutorRut": "11111111-1"
+        },
+        "esperado": 201
+      }
+    },
+    {
+      "id": "HU-03",
+      "titulo": "Inscripción de animal comunitario con responsable mayor de edad y sector",
+      "responsable": "simon1234567891011121314",
+      "verificacion": {
+        "metodo": "POST",
+        "ruta": "/api/registro/animales",
+        "perfil": "funcionario",
+        "cuerpo": {
+          "especie": "gato",
+          "raza": "Mestizo",
+          "razaObservada": "Mestizo pelaje negro",
+          "nombre": "Coco",
+          "sexo": "hembra",
+          "edadAproximada": 3,
+          "color": "Negro",
+          "comunitario": true,
+          "responsableRut": "11111111-1",
+          "sector": "Junta de Vecinos Playa Blanca"
+        },
+        "esperado": 201
+      }
+    },
+    {
+      "id": "HU-04",
+      "titulo": "Asociación de código de microchip único de 15 dígitos a un animal",
+      "responsable": "nico-lol",
+      "verificacion": {
+        "metodo": "PATCH",
+        "ruta": "/api/registro/animales/A-000001/microchip",
+        "perfil": "veterinario",
+        "cuerpo": {
+          "microchip": "985112003456789"
+        },
+        "esperado": 200
+      }
+    },
+    {
+      "id": "HU-05",
+      "titulo": "Consulta estandarizada de los datos de un animal mediante su identificador",
+      "responsable": "luisfeliperamirez",
+      "verificacion": {
+        "metodo": "GET",
+        "ruta": "/api/registro/animales/A-000001",
+        "perfil": "funcionario",
+        "esperado": 200
+      }
+    },
+    {
+      "id": "HU-06",
+      "titulo": "Registro de fallecimiento del animal",
+      "responsable": "USUARIO_GITHUB_SCARLETT",
+      "verificacion": {
+        "metodo": "PATCH",
+        "ruta": "/api/registro/animales/A-000002/defuncion",
+        "perfil": "funcionario",
+        "cuerpo": {
+          "fechaDefuncion": "2026-11-25",
+          "causaDefuncion": "Causas naturales"
+        },
+        "esperado": 200
+      }
+    }
+  ]
+}
